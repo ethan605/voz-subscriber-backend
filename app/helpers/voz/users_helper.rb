@@ -1,0 +1,2 @@
+module Voz::UsersHelper
+end
