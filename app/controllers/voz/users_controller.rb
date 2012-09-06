@@ -1,9 +1,10 @@
 class Voz::UsersController < ApplicationController
   def index
   	users = User.all
-  	# binding.pry
+  	users = users.order_by([[:userid]]).page(params[:page]).per(params[:per_page])
+
   	if users.count > 0
-  		render json: {status: "0", voz_users: users.order_by([[:userid]])}
+  		render json: {status: "0", voz_users: users}
   	else
   		render json: {status: "1", message: "No users found"}
   	end

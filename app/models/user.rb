@@ -11,7 +11,7 @@ class User
   
   has_many :posts
 
-  scope :userid, ->(x) { where(userid: x) }
+  scope :userid, ->(_userid) { where(userid: _userid) }
 
   validates_presence_of :userid, :username
   validates_uniqueness_of :userid
@@ -43,7 +43,6 @@ class User
       location: location,
       signature: signature,
       join_date: join_date,
-      posts: posts.order_by([[:postid, :desc]])
     }
   end
 end
