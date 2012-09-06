@@ -3,7 +3,7 @@ class Voz::UsersController < ApplicationController
   	users = User.all
   	# binding.pry
   	if users.count > 0
-  		render json: {status: "0", voz_users: users}
+  		render json: {status: "0", voz_users: users.order_by([[:userid]])}
   	else
   		render json: {status: "1", message: "No users found"}
   	end
