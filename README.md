@@ -1,4 +1,4 @@
-voz-subscriber
+voz-subscriber-backend
 ==============
 
 VoZ Forums User Subscriber
