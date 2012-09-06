@@ -2,6 +2,8 @@ class Voz::User
   include Mongoid::Document
   include Mongoid::CachedJson
 
+  include Voz::Crawl
+
   field :vozid, type: Integer
   field :username
 
