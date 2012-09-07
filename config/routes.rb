@@ -1,4 +1,5 @@
 VozSubscriberBackend::Application.routes.draw do
+  root :to => 'application#index'
   namespace :voz do
     resources :users, :posts, only: %w[index]
   end
