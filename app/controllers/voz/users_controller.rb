@@ -1,18 +1,19 @@
 class Voz::UsersController < ApplicationController
   def index
     status = 0
-    status_messages = ['', 'User not found', 'No user found']
+    messages = ['', 'User not found', 'No user found']
 
   	users = User.all.order_by([[:userid]])
     if params[:userid]
-      users = User.userid(params[:userid])
-      if users.count == 0
+      user = User.userid(params[:userid]).first
+      if user
         status = 1
       else
-        users = users.first.full_json
+        users = user.full_json
       end
     else
       users = users.page(params[:page]).per(params[:per_page])
+      users = users.search(params[:q])
       if users.count == 0
         status = 2
       end
@@ -21,7 +22,7 @@ class Voz::UsersController < ApplicationController
   	if status == 0
   		render json: {status: status, users: users}
   	else
-  		render json: {status: status, message: status_messages[status]}
+  		render json: {status: status, message: messages[status]}
   	end
   end
 end

@@ -1,6 +1,7 @@
 class Post
   include Mongoid::Document
   include Mongoid::CachedJson
+  include Mongoid::Search
 
   belongs_to :user
 
@@ -10,6 +11,10 @@ class Post
 
   validates_presence_of :postid, :title
   validates_uniqueness_of :postid
+
+  search_in :title, :spoiler
+
+  scope :search, ->(_search) { full_text_search(_search, allow_empty_search: true) }
 
   json_fields \
   	title: { },

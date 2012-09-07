@@ -16,6 +16,7 @@ class User
   has_many :posts
 
   scope :userid, ->(_userid) { where(userid: _userid) }
+  scope :search, ->(_username) { full_text_search(_username, allow_empty_search: true) }
 
   json_fields \
   	userid: { },
@@ -23,8 +24,8 @@ class User
 
   search_in :username
 
-  def self.crawl(from = 1, to = 9999)
-    from.upto(to) do |i|
+  def self.crawl(from = 1, range = 10)
+    from.upto(from+range) do |i|
       Crawler::UsersCrawler.new.crawl(i)
     end
   end
