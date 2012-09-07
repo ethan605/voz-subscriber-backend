@@ -25,7 +25,14 @@ class Post
   	Crawler::PostsCrawler.new.crawl(userid)
   end
 
+  def self.max_postid
+    max_post = Post.all.order_by([[:postid, :desc]]).first
+    
+    return max_post.postid if max_post
+    return 0
+  end
+
   def url_for_postid
-  	"http://vozforums.com/showthread.php?p=#{postid}"
+  	return "http://vozforums.com/showthread.php?p=#{postid}"
   end
 end

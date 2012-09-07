@@ -13,7 +13,7 @@ class Crawler::Crawler
 			puts "Logged in to #{url} using username: #{username}, password: #{password} sucessfully."
 		end
 		
-		agent
+		return agent
 	end
 
 	# Method to be overriden

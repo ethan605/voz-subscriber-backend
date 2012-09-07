@@ -20,16 +20,7 @@ class Crawler::UsersCrawler < Crawler::Crawler
 		user.location = (info.count > 0) ? info.first.text.strip : '<no location>'
 		user.signature = (info.count > 0) ? info.last.text.strip : '<no signature>'
 
-		info = doc.css('#collapseobj_stats_mini .alt1 dl dd')
-
-		if info.count == 2
-			info = info.first
-		else
-			if info.count == 3
-				info = info.at(1)
-			end
-		end
-
+		info = doc.css('#collapseobj_stats_mini .alt1 dl dd').at(info.count-2)
 		user.join_date = info.text
 
 		user.save
