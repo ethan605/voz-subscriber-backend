@@ -1,6 +1,7 @@
 class User
   include Mongoid::Document
   include Mongoid::CachedJson
+  include Mongoid::Search
 
   field :userid, type: Integer
   field :username
@@ -9,26 +10,23 @@ class User
   field :signature
   field :join_date
   
+  validates_presence_of :userid, :username
+  validates_uniqueness_of :userid
+  
   has_many :posts
 
   scope :userid, ->(_userid) { where(userid: _userid) }
 
-  validates_presence_of :userid, :username
-  validates_uniqueness_of :userid
-
   json_fields \
   	userid: { },
-  	username: { },
-    total_posts: { definition: :posts_count }
+  	username: { }
 
-  def self.crawl(from = 1055511, to = 1055512)
+  search_in :username
+
+  def self.crawl(from = 1, to = 9999)
     from.upto(to) do |i|
       Crawler::UsersCrawler.new.crawl(i)
     end
-  end
-
-  def posts_count
-    post_ids.count
   end
 
   def posts_json
@@ -43,6 +41,7 @@ class User
       location: location,
       signature: signature,
       join_date: join_date,
+      total_posts: post_ids.count
     }
   end
 end

@@ -1,8 +1,6 @@
 VozSubscriberBackend::Application.routes.draw do
   namespace :voz do
-    resources :users, only: %w[index show] do
-      resources :posts, only: %w[index]
-    end
+    resources :users, :posts, only: %w[index]
   end
 
   # The priority is based upon order of creation:

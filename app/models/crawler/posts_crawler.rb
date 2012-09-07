@@ -11,10 +11,11 @@ class Crawler::PostsCrawler < Crawler::Crawler
 		return if (page.content.include?("Sorry - no matches. Please try some different terms."))
 
 		doc = Nokogiri::HTML(page.content)
-		page_count = doc.css('.pagenav .tborder .alt1 .smallfont').last[:href][/&page=[0-9]+/][/[0-9]+/].to_i
+		info = doc.css('.pagenav .tborder .alt1 .smallfont')
+		page_count = (info.count > 0) ? info.last[:href][/&page=[0-9]+/][/[0-9]+/].to_i : 1
 		url = page.uri.to_s + '&page='
 
-		1.upto(page_count) do |i|
+		1.upto(1) do |i|
 			page = agent.get(url + "#{i}")
 			puts "Crawling posts with url: " + url + "#{i}"
 			doc = Nokogiri::HTML(page.content)
