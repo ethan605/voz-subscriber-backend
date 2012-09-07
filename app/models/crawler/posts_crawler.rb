@@ -1,11 +1,17 @@
 class Crawler::PostsCrawler < Crawler::Crawler
 	# Override method
 	def crawl(userid)
-		puts "Crawling posts with userid #{userid}\n"
+		puts "\nCrawling posts with userid #{userid}"
 
-		agent = Crawler::Crawler.login
-		url = 'http://vozforums.com/search.php?do=finduser&u='
-		page = agent.get(url + "#{userid}")
+		@@auth_agent = Crawler::Crawler.login if !@@auth_agent
+		@url = 'http://vozforums.com/search.php?do=finduser&u='
+		
+		begin
+			page = @@auth_agent.get("#{@url}#{userid}")
+		rescue Mechanize::ResponseCodeError => e
+			puts "#{e}"
+			return
+		end
 
 		# In case of no post found with this userid
 		return if (page.content.include?("Sorry - no matches. Please try some different terms."))
@@ -13,26 +19,32 @@ class Crawler::PostsCrawler < Crawler::Crawler
 		doc = Nokogiri::HTML(page.content)
 		info = doc.css('.pagenav .tborder .alt1 .smallfont')
 		page_count = (info.count > 0) ? info.last[:href][/&page=[0-9]+/][/[0-9]+/].to_i : 1
-		url = page.uri.to_s + '&page='
+		@url = "#{page.uri}&page="
 
 		1.upto(page_count) do |i|
-			puts "Crawling posts with url: " + url + "#{i}\n\n"
+			puts "Crawling posts with url: #{@url}#{i}"
 			
-			page = agent.get(url + "#{i}")
-			doc = Nokogiri::HTML(page.content)
-			results = doc.css('#inlinemodform').first
-			results.css('.tborder .alt2 .smallfont a').each do |a|
-				postid = a[:href][/#[^#]*/][/[0-9]+/].to_i
-				
-				break if postid < Post.max_postid
-				
-				post = Post.find_or_initialize_by(postid: postid)
-				post.title = a.text
-				post.spoiler = a.next.next.next.text
-				post.spoiler = post.spoiler.gsub(/[\r\t\n]/, '').strip
-				post.user_id = User.userid(userid).first._id
-				post.save
+			begin
+				perform_crawler(i, userid)
+			rescue Mechanize::ResponseCodeError => e
+				puts "#{e}"
+				next
 			end
+		end
+	end
+
+	def perform_crawler(index, userid)
+		page = @@auth_agent.get("#{@url}#{index}")
+		doc = Nokogiri::HTML(page.content)
+		results = doc.css('#inlinemodform').first
+		results.css('.tborder .alt2 .smallfont a').each do |a|
+			postid = a[:href][/#[^#]*/][/[0-9]+/].to_i
+			post = Post.find_or_initialize_by(postid: postid)
+			post.title = a.text
+			post.spoiler = a.next.next.next.text
+			post.spoiler = post.spoiler.gsub(/[\r\t\n]/, '').strip
+			post.user_id = User.userid(userid).first._id
+			post.save
 		end
 	end
 end

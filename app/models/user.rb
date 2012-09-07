@@ -25,6 +25,7 @@ class User
 	search_in :username
 
 	def self.crawl(from = 1, range = 10)
+		# Crawler::Crawler.auth_agent = nil
 		from.upto(from+range) do |i|
 			Crawler::UsersCrawler.new.crawl(i)
 		end

@@ -1,13 +1,22 @@
 class Crawler::UsersCrawler < Crawler::Crawler
 	# Override method
 	def crawl(userid)
-		puts "Crawling user with id #{userid}"
+		puts "\n\nCrawling user with id #{userid}"
 
-		agent = Crawler::Crawler.login
-		url = 'http://vozforums.com/member.php?u='
+		@@auth_agent = Crawler::Crawler.login if !@@auth_agent
+		@url = 'http://vozforums.com/member.php?u='
 
-		page = agent.get(url + "#{userid}")
-		puts "Crawling users with url: #{url}#{userid}"
+		begin
+			perform_crawler(userid)
+		rescue Mechanize::ResponseCodeError => e
+			puts "#{e}"
+			return
+		end
+	end
+
+	def perform_crawler(userid)
+		puts "Crawling users with url: #{@url}#{userid}"
+		page = @@auth_agent.get("#{@url}#{userid}")
 		doc = Nokogiri::HTML(page.content)
 
 		user = User.find_or_initialize_by(userid: userid)
@@ -20,11 +29,14 @@ class Crawler::UsersCrawler < Crawler::Crawler
 		user.location = (info.count > 0) ? info.first.text.strip : '<no location>'
 		user.signature = (info.count > 0) ? info.last.text.strip : '<no signature>'
 
-		info = doc.css('#collapseobj_stats_mini .alt1 dl dd').at(info.count-2)
+		info = doc.css('#collapseobj_stats_mini .alt1 dl dd')
+
+		info = info.at(info.count-2)
 		user.join_date = info.text
 
 		user.save
 
+		puts "crawled user: #{user.username} id: #{user.userid}"
 		Crawler::PostsCrawler.new.crawl(userid)
 	end
 end
