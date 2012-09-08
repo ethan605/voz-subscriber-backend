@@ -16,7 +16,14 @@ class Crawler::UsersCrawler < Crawler::Crawler
 
 	def perform_crawler(userid)
 		puts "Crawling users with url: #{@url}#{userid}"
+
 		page = @@auth_agent.get("#{@url}#{userid}")
+
+		if page.content.include?('You are not logged in')
+			@@auth_agent = Crawler::Crawler.login
+			page = @@auth_agent.get("#{@url}#{userid}")
+		end
+
 		doc = Nokogiri::HTML(page.content)
 
 		user = User.find_or_initialize_by(userid: userid)
@@ -34,9 +41,9 @@ class Crawler::UsersCrawler < Crawler::Crawler
 		info = info.at(info.count-2)
 		user.join_date = info.text
 
-		user.save
+		return if !user.save
 
-		puts "crawled user: #{user.username} id: #{user.userid}"
+		puts "Crawled user: #{user.username} id: #{user.userid}"
 		Crawler::PostsCrawler.new.crawl(userid)
 	end
 end

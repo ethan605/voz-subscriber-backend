@@ -5,6 +5,7 @@ class Crawler::PostsCrawler < Crawler::Crawler
 
 		@@auth_agent = Crawler::Crawler.login if !@@auth_agent
 		@url = 'http://vozforums.com/search.php?do=finduser&u='
+		@user_db_id = User.userid(userid).first._id
 		
 		begin
 			page = @@auth_agent.get("#{@url}#{userid}")
@@ -35,16 +36,27 @@ class Crawler::PostsCrawler < Crawler::Crawler
 
 	def perform_crawler(index, userid)
 		page = @@auth_agent.get("#{@url}#{index}")
+
+		if page.content.include?('You are not logged in')
+			@@auth_agent = Crawler::Crawler.login
+			page = @@auth_agent.get("#{@url}#{userid}")
+		end
+
 		doc = Nokogiri::HTML(page.content)
 		results = doc.css('#inlinemodform').first
-		results.css('.tborder .alt2 .smallfont a').each do |a|
-			postid = a[:href][/#[^#]*/][/[0-9]+/].to_i
-			post = Post.find_or_initialize_by(postid: postid)
-			post.title = a.text
-			post.spoiler = a.next.next.next.text
-			post.spoiler = post.spoiler.gsub(/[\r\t\n]/, '').strip
-			post.user_id = User.userid(userid).first._id
-			post.save
+		begin
+			results.css('.tborder .alt2 .smallfont a').each do |a|
+				postid = a[:href][/#[^#]*/][/[0-9]+/].to_i
+				post = Post.find_or_initialize_by(postid: postid)
+				post.title = a.text
+				post.spoiler = a.next.next.next.text
+				post.spoiler = post.spoiler.gsub(/[\r\t\n]/, '').strip
+				post.user_id = @user_db_id
+				post.save
+			end
+		rescue NoMethodError => e
+			puts "#{e}"
+			return
 		end
 	end
 end
