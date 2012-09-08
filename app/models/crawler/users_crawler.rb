@@ -6,12 +6,7 @@ class Crawler::UsersCrawler < Crawler::Crawler
 		@@auth_agent = Crawler::Crawler.login if !@@auth_agent
 		@url = 'http://vozforums.com/member.php?u='
 
-		begin
-			perform_crawler(userid)
-		rescue Mechanize::ResponseCodeError => e
-			puts "#{e}"
-			return
-		end
+		ensure_authen perform_crawler(userid)
 	end
 
 	def perform_crawler(userid)

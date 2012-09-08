@@ -31,4 +31,13 @@ class Crawler::Crawler
 	# Method to be overriden
 	def crawl
 	end
+
+	def ensure_authen
+		begin
+			yield
+		rescue Mechanize::ResponseCodeError => e
+			puts "#{e}"
+			return
+		end
+	end
 end
