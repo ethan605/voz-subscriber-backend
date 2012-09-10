@@ -18,6 +18,7 @@ class Post
   scope :search, ->(_search) { full_text_search(_search, allow_empty_search: true) }
 
   json_fields \
+    username: { definition: :post_user },
   	title: { },
   	spoiler: { },
   	url: { definition: :url_for_postid }
@@ -26,11 +27,8 @@ class Post
   	Crawler::PostsCrawler.new.crawl(userid)
   end
 
-  def self.max_postid
-    max_post = Post.all.order_by([[:postid, :desc]]).first
-    
-    return max_post.postid if max_post
-    return 0
+  def post_user
+    return User.find(user_id).username
   end
 
   def url_for_postid

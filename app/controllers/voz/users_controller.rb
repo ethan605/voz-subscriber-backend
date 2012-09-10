@@ -2,6 +2,8 @@ class Voz::UsersController < ApplicationController
 	def index
 		status = 0
 		messages = ['', 'User not found', 'No user found']
+		User.request_host = request.protocol + request.host
+		User.request_host += ":#{request.port}" if request.host == "localhost"
 
 		users = User.all.order_by([[:userid]])
 		if params[:userid]

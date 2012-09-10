@@ -2,6 +2,9 @@ class User
 	include Mongoid::Document
 	include Mongoid::CachedJson
 	include Mongoid::Search
+	
+	@@request_host = "http://localhost:3000"
+	attr_reader :request_host
 
 	field :userid, type: Integer
 	field :username
@@ -20,7 +23,8 @@ class User
 
 	json_fields \
 		userid: { },
-		username: { }
+		username: { },
+		posts_url: { definition: :posts_url }
 
 	search_in :username
 
@@ -31,8 +35,20 @@ class User
 		end
 	end
 
+	def self.request_host
+		return @@request_host
+	end
+
+	def self.request_host=(_request_host = "http://localrequest_host:3000")
+		@@request_host = _request_host
+	end
+
 	def posts_json
 		return posts.as_json
+	end
+
+	def posts_url
+		return "#{@@request_host}/voz/posts?userid=#{userid}"
 	end
 
 	def full_json
@@ -43,7 +59,8 @@ class User
 			location: location,
 			signature: signature,
 			join_date: join_date,
-			total_posts: post_ids.count
+			total_posts: post_ids.count,
+			posts_url: posts_url
 		}
 	end
 end
