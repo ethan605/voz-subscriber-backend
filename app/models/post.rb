@@ -14,6 +14,7 @@ class Post
 
   search_in :title, :spoiler
 
+  scope :postid, ->(_postid) { where(postid: _postid) }
   scope :search, ->(_search) { full_text_search(_search, allow_empty_search: true) }
 
   json_fields \

@@ -19,9 +19,8 @@ class Crawler::PostsCrawler < Crawler::Crawler
 			@url = "#{page.uri}&page="
 
 			1.upto(page_count) do |i|
-				puts "Crawling posts with url: #{@url}#{i}"
-				
 				ensure_authen do
+					puts "Crawling posts with url: #{@url}#{i}"
 					perform_crawler(i, userid)
 				end
 			end
@@ -31,26 +30,33 @@ class Crawler::PostsCrawler < Crawler::Crawler
 	def perform_crawler(index, userid)
 		page = @@auth_agent.get("#{@url}#{index}")
 
-		if page.content.include?('You are not logged in')
+		# If Mechanize agent's cookie or search session is expired
+		if page.content.include?('You are not logged in') ||
+			 page.content.include?('Sorry - no matches.')
 			@@auth_agent = Crawler::Crawler.login
 			page = @@auth_agent.get("#{@url}#{userid}")
+			page = @@auth_agent.get("#{page.uri}&page=#{index}")
 		end
 
+		retrieve_data_from_page(page)
+
+	end
+
+	def retrieve_data_from_page(page)
 		doc = Nokogiri::HTML(page.content)
 		results = doc.css('#inlinemodform').first
-		begin
-			results.css('.tborder .alt2 .smallfont a').each do |a|
-				postid = a[:href][/#[^#]*/][/[0-9]+/].to_i
-				post = Post.find_or_initialize_by(postid: postid)
-				post.title = a.text
-				post.spoiler = a.next.next.next.text
-				post.spoiler = post.spoiler.gsub(/[\r\t\n]/, '').strip
-				post.user_id = @user_db_id
-				post.save
-			end
-		rescue NoMethodError => e
-			puts "#{e}"
-			return
+
+		results.css('.tborder .alt2 .smallfont a').each do |a|
+			postid = a[:href][/#[^#]*/][/[0-9]+/].to_i
+
+			next if Post.postid(postid).count > 0
+
+			post = Post.find_or_initialize_by(postid: postid)
+			post.title = a.text
+			post.spoiler = a.next.next.next.text
+			post.spoiler = post.spoiler.gsub(/[\r\t\n]/, '').strip
+			post.user_id = @user_db_id
+			post.save
 		end
 	end
 end

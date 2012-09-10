@@ -6,7 +6,9 @@ class Crawler::UsersCrawler < Crawler::Crawler
 		@@auth_agent = Crawler::Crawler.login if !@@auth_agent
 		@url = 'http://vozforums.com/member.php?u='
 
-		ensure_authen perform_crawler(userid)
+		ensure_authen do
+			perform_crawler(userid)
+		end
 	end
 
 	def perform_crawler(userid)

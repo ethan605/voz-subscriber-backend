@@ -37,7 +37,8 @@ class Crawler::Crawler
 			yield
 		rescue Mechanize::ResponseCodeError => e
 			puts "#{e}"
-			return
+			sleep(3)
+			yield
 		end
 	end
 end
