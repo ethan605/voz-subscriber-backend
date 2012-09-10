@@ -11,7 +11,7 @@ class Crawler::PostsCrawler < Crawler::Crawler
 			page = @@auth_agent.get("#{@url}#{userid}")
 
 			# In case of no post found with this userid
-			return if (page.content.include?("Sorry - no matches. Please try some different terms."))
+			return if (page.content.include?('Sorry - no matches. Please try some different terms.'))
 
 			doc = Nokogiri::HTML(page.content)
 			info = doc.css('.pagenav .tborder .alt1 .smallfont')
@@ -33,6 +33,7 @@ class Crawler::PostsCrawler < Crawler::Crawler
 		# If Mechanize agent's cookie or search session is expired
 		if page.content.include?('You are not logged in') ||
 			 page.content.include?('Sorry - no matches.')
+			puts "#{page.content.include?('You are not logged in')}#{page.content.include?('Sorry - no matches.')}"
 			@@auth_agent = Crawler::Crawler.login
 			page = @@auth_agent.get("#{@url}#{userid}")
 			page = @@auth_agent.get("#{page.uri}&page=#{index}")

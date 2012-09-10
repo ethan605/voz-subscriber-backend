@@ -1,5 +1,11 @@
 VozSubscriberBackend::Application.routes.draw do
   root :to => 'application#index'
+
+  resource :subscribers, only: %w[index create subscribe] do
+    get 'index'
+    post 'subscribe'
+  end
+
   namespace :voz do
     resources :users, :posts, only: %w[index]
   end

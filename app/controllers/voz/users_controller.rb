@@ -22,9 +22,9 @@ class Voz::UsersController < ApplicationController
 		end
 
 		if status == 0
-			render json: {status: status, results: users.count, users: users }
+			render json: { status: status, results: users.count, users: users }
 		else
-			render json: {status: status, message: messages[status] }
+			render json: { status: status, message: messages[status] }
 		end
 	end
 end

@@ -17,6 +17,7 @@ class User
 	validates_uniqueness_of :userid
 	
 	has_many :posts
+	has_and_belongs_to_many :subscribers
 
 	scope :userid, ->(_userid) { return where(userid: _userid) }
 	scope :search, ->(_username) { return full_text_search(_username, allow_empty_search: true) }
@@ -29,7 +30,6 @@ class User
 	search_in :username
 
 	def self.crawl(from = 1, range = 10)
-		# Crawler::Crawler.auth_agent = nil
 		from.upto(from+range) do |i|
 			Crawler::UsersCrawler.new.crawl(i)
 		end
@@ -41,10 +41,6 @@ class User
 
 	def self.request_host=(_request_host = "http://localrequest_host:3000")
 		@@request_host = _request_host
-	end
-
-	def posts_json
-		return posts.as_json
 	end
 
 	def posts_url
