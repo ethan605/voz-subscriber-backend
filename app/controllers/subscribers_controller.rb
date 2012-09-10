@@ -21,6 +21,7 @@ class SubscribersController < ApplicationController
 		subscriber = Subscriber.new(email: params[:email], password: params[:password])
 
 		if subscriber.save
+			SubscribeMailer.welcome_email(subscriber).deliver
 			render json: { status: 0, subscriber: subscriber }
 		else
 			render json: { status: 1, errors: subscriber.errors }
