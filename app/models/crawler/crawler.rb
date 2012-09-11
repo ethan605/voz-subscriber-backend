@@ -37,6 +37,7 @@ class Crawler::Crawler
 			yield
 		rescue Mechanize::ResponseCodeError => e
 			puts "#{e}"
+			puts "Waiting 3 seconds to continue"
 			sleep(3)
 			yield
 		end

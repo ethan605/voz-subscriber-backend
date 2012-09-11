@@ -29,6 +29,15 @@ class User
 
 	search_in :username
 
+	def self.bootstrap
+    Subscriber.delete_all
+    User.delete_all
+    Post.delete_all
+
+    User.crawl(100, 1)
+    User.crawl(1055511, 0)
+  end
+
 	def self.crawl(from = 1, range = 10)
 		from.upto(from+range) do |i|
 			Crawler::UsersCrawler.new.crawl(i)

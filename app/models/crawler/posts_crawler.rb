@@ -5,7 +5,7 @@ class Crawler::PostsCrawler < Crawler::Crawler
 
     @@auth_agent = Crawler::Crawler.login if !@@auth_agent
     @url = 'http://vozforums.com/search.php?do=finduser&u='
-    @user_db_id = User.userid(userid).first._id
+    @user_db_id = User.userid(userid).first.id
     
     ensure_authen do
       page = @@auth_agent.get("#{@url}#{userid}")
@@ -32,8 +32,7 @@ class Crawler::PostsCrawler < Crawler::Crawler
 
     # If Mechanize agent's cookie or search session is expired
     if page.content.include?('You are not logged in') ||
-       page.content.include?('Sorry - no matches.')
-      puts "#{page.content.include?('You are not logged in')}#{page.content.include?('Sorry - no matches.')}"
+       page.content.include?('Sorry - no matches. Please try some different terms.')
       @@auth_agent = Crawler::Crawler.login
       page = @@auth_agent.get("#{@url}#{userid}")
       page = @@auth_agent.get("#{page.uri}&page=#{index}")

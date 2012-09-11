@@ -27,7 +27,7 @@ class Subscriber
 
   def subscribed_posts
     return nil if users.count == 0
-    posts = users.first.posts
+    posts = users.first.posts.clone
     1.upto(users.count-1) do |i|
       posts << users.at(i).posts
     end
