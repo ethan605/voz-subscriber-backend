@@ -5,17 +5,17 @@ class Voz::UsersController < ApplicationController
 		User.request_host = request.protocol + request.host
 		User.request_host += ":#{request.port}" if request.host == "localhost"
 
-		users = User.all.order_by([[:userid]])
 		if params[:userid]
 			user = User.userid(params[:userid]).first
 			if user
 				users = user.full_json
 			else
-				status = 1  # user not found
+				# User not found
+				status = 1
 			end
 		else
-			users = users.page(params[:page]).per(params[:per_page])
-			users = users.search(params[:q])
+			users = User.all.order_by([[:userid]])
+			users = users.search(params[:q]).page(params[:page]).per(params[:per_page])
 
 			# No user found
 			status = 2 if users.count == 0

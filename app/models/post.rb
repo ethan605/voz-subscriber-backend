@@ -6,6 +6,7 @@ class Post
   belongs_to :user
 
   field :postid, type: Integer
+  field :post_date, type: Time
   field :title
   field :spoiler
 
@@ -21,10 +22,15 @@ class Post
     username: { definition: :post_user },
   	title: { },
   	spoiler: { },
+    post_date: { definition: :post_date_rfc },
   	url: { definition: :url_for_postid }
 
   def self.crawl(userid)
   	Crawler::PostsCrawler.new.crawl(userid)
+  end
+
+  def post_date_rfc
+    return post_date.rfc822
   end
 
   def post_user

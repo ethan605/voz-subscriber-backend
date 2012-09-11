@@ -14,15 +14,14 @@ class Voz::PostsController < ApplicationController
 			end
 		else
 			# Show all posts
-			posts = Post.all.order_by([[:postid, :desc]])
+			posts = Post.all
 			posts = posts.search(params[:q])
 			status = 3 if posts.count == 0
 		end
 
-		# Paging results
-		posts = posts.page(params[:page]).per(params[:per_page])
-
-		if status = 0
+		if status == 0
+			# Paging results
+			posts = posts.order_by([[:postid, :desc]]).page(params[:page]).per(params[:per_page])
 			render json: { status: status, results: posts.count, posts: posts }
 		else
 			render json: { status: 1, message: messages[status] }

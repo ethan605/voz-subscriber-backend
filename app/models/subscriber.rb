@@ -24,4 +24,13 @@ class Subscriber
   def subscribed_users
   	return users.as_json
   end
+
+  def subscribed_posts
+    return nil if users.count == 0
+    posts = users.first.posts
+    1.upto(users.count-1) do |i|
+      posts << users.at(i).posts
+    end
+    return posts
+  end
 end
