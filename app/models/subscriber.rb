@@ -13,8 +13,10 @@ class Subscriber
 
   search_in :email
 
-  scope :email, ->(_email) { where(email: _email) }
-  scope :search, ->(_email) { return full_text_search(_email, allow_empty_search: true) }
+  scope :email, ->(_email) { return self.where(email: _email) }
+  scope :search, ->(_email) {
+    return self.full_text_search(_email, allow_empty_search: true)
+  }
 
   json_fields \
   	id: { },
@@ -27,10 +29,8 @@ class Subscriber
 
   def subscribed_posts
     return nil if users.count == 0
-    posts = users.first.posts.clone
-    1.upto(users.count-1) do |i|
-      posts << users.at(i).posts
-    end
-    return posts
+    user_ids = []
+    users.each { |u| user_ids << u.id }
+    return Post.user_ids(user_ids)
   end
 end

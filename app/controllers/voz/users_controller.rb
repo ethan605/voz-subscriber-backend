@@ -14,7 +14,7 @@ class Voz::UsersController < ApplicationController
 				status = 1
 			end
 		else
-			users = User.all.order_by([[:userid]])
+			users = User.all.order_by([:userid])
 			users = users.search(params[:q]).page(params[:page]).per(params[:per_page])
 
 			# No user found

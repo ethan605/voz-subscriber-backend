@@ -19,8 +19,10 @@ class User
 	has_many :posts
 	has_and_belongs_to_many :subscribers
 
-	scope :userid, ->(_userid) { return where(userid: _userid) }
-	scope :search, ->(_username) { return full_text_search(_username, allow_empty_search: true) }
+	scope :userid, ->(_userid) { return self.where(userid: _userid) }
+	scope :search, ->(_username) {
+		return self.full_text_search(_username, allow_empty_search: true)
+	}
 
 	json_fields \
 		userid: { },

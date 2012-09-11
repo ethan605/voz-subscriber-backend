@@ -15,8 +15,11 @@ class Post
 
   search_in :title, :spoiler
 
-  scope :postid, ->(_postid) { where(postid: _postid) }
-  scope :search, ->(_search) { full_text_search(_search, allow_empty_search: true) }
+  scope :postid, ->(_postid) { return self.where(postid: _postid) }
+  scope :user_ids, ->(_user_ids) { return self.in(user_id: _user_ids ) }
+  scope :search, ->(_search) {
+    return self.full_text_search(_search, allow_empty_search: true)
+  }
 
   json_fields \
     username: { definition: :post_user },

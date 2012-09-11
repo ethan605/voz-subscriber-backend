@@ -8,8 +8,8 @@ xml.rss :version => "2.0" do
 
     for post in @posts
       xml.item do
-        xml.title         post.title
-        xml.description   "[#{post.user.userid}] #{post.spoiler}"
+        xml.title         "[#{post.user.username}] #{post.title}"
+        xml.description   post.spoiler
         xml.pubDate       post.post_date.rfc822
         xml.link          post.url_for_postid
       end
