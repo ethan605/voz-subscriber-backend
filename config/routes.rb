@@ -5,6 +5,7 @@ VozSubscriberBackend::Application.routes.draw do
 		collection do
 			post 'create'
 			post 'subscribe'
+			post 'unsubscribe'
 		end
 	end
 

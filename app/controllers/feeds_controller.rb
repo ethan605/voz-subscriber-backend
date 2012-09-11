@@ -41,7 +41,7 @@ class FeedsController < ApplicationController
     end
 
     status = 3 if @posts.count == 0
-    @posts = @posts.order_by([:postid, :desc]).page(1).per(50) if status == 0
+    @posts = @posts.order_by([:postid, :desc]).page(1).per(30) if status == 0
 
     respond_to do |format|
       format.rss { render layout: false }
