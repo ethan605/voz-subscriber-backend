@@ -9,7 +9,7 @@
 			You have successfully registered to our site,<br/>
 		</p>
 		<p>
-			Please follow <a href="<%= subscribe_subscribers_url %>">this link</a> to subscribe a Voz's user
+			Please follow <a href="<%= feeds_url + ".rss?subscriber_id=#{@subscriber.id}" %>">this link</a> to subscribe a Voz's user
 		</p>
 		<p>Thanks you!</p>
 	</body>
