@@ -3,20 +3,20 @@ class FollowersController < ApplicationController
     status = 0
     messages = ['', 'Email not found', 'Invalid password']
     
-    params[:follower].reject! do |k, v|
+    params[:subscriber].reject! do |k, v|
       !%w[email password password_confirmation].include?(k)
     end
 
-    follower = Follower.where(email: params[:follower][:email]).first
-    if !follower
+    subscriber = Subscriber.where(email: params[:subscriber][:email]).first
+    if !subscriber
       status = 1
     else
-      status = 2 unless follower.valid_password?(params[:follower][:password])
+      status = 2 unless subscriber.valid_password?(params[:subscriber][:password])
     end
 
     if status == 0
-      follower.reset_authentication_token
-      render json: { status: 0, follower: follower }
+      subscriber.reset_authentication_token
+      render json: { status: 0, subscriber: subscriber }
     else
       render json: { status: @status, message: messages[status] }
     end
@@ -26,26 +26,26 @@ class FollowersController < ApplicationController
     status = 0
     messages = ['', 'Email not found', 'Invalid password']
 
-    follower = Follower.where(email: params[:follower][:email]).first
-    if !follower
+    subscriber = Subscriber.where(email: params[:subscriber][:email]).first
+    if !subscriber
       status = 1
     else
-      if !follower.valid_password?(params[:follower][:current_password])
+      if !subscriber.valid_password?(params[:subscriber][:current_password])
         status = 2
       else
-        params[:follower].reject! do |k, v|
+        params[:subscriber].reject! do |k, v|
           !%w[email password password_confirmation].include?(k)
         end
-        follower.reset_authentication_token
-        status = 3 unless follower.update_attributes(params[:follower])
+        subscriber.reset_authentication_token
+        status = 3 unless subscriber.update_attributes(params[:subscriber])
       end
     end
     
     if status == 0
-      render json: { status: status, follower: follower }
+      render json: { status: status, subscriber: subscriber }
     else
       if status == 3
-        render json: { status: status, errors: follower.errors }
+        render json: { status: status, errors: subscriber.errors }
       else
         render json: { status: status, message: messages[status] }
       end
@@ -53,17 +53,17 @@ class FollowersController < ApplicationController
   end
 
   def sign_up
-    params[:follower].reject! do |k, v|
+    params[:subscriber].reject! do |k, v|
       !%w[email password password_confirmation].include?(k)
     end
 
-    follower = Follower.new(params[:follower])
+    subscriber = Subscriber.new(params[:subscriber])
 
-    follower.reset_authentication_token
-    if follower.save
-      render json: { status: 0, follower: follower }
+    subscriber.reset_authentication_token
+    if subscriber.save
+      render json: { status: 0, subscriber: subscriber }
     else
-      render json: { status: 1, errors: follower.errors }
+      render json: { status: 1, errors: subscriber.errors }
     end
   end
 end
