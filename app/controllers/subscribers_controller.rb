@@ -1,43 +1,44 @@
 class SubscribersController < ApplicationController
+  # POST /subscribers
   def create
     status = 0
     messages = ['', 'Email not found', 'Invalid password']
     
-    params[:subscriber].reject! do |k, v|
+    # Ensure only expected params are kept
+    params.reject! do |k, v|
       !%w[email password password_confirmation].include?(k)
     end
 
-    subscriber = Subscriber.where(email: params[:subscriber][:email]).first
+    subscriber = Subscriber.where(email: params[:email]).first
     if !subscriber
       status = 1
     else
-      status = 2 unless subscriber.valid_password?(params[:subscriber][:password])
+      status = 2 unless subscriber.valid_password?(params[:password])
     end
 
     if status == 0
-      subscriber.reset_authentication_token
-      render json: { status: 0, subscriber: subscriber }
+      render json: { status: status, subscriber: subscriber }
     else
-      render json: { status: @status, message: messages[status] }
+      render json: { status: status, message: messages[status] }
     end
   end
 
+  # PUT /subscribers
   def update
     status = 0
     messages = ['', 'Email not found', 'Invalid password']
 
-    subscriber = Subscriber.where(email: params[:subscriber][:email]).first
+    subscriber = Subscriber.where(email: params[:email]).first
     if !subscriber
       status = 1
     else
-      if !subscriber.valid_password?(params[:subscriber][:current_password])
+      if !subscriber.valid_password?(params[:current_password])
         status = 2
       else
-        params[:subscriber].reject! do |k, v|
+        params.reject! do |k, v|
           !%w[email password password_confirmation].include?(k)
         end
-        subscriber.reset_authentication_token
-        status = 3 unless subscriber.update_attributes(params[:subscriber])
+        status = 3 unless subscriber.update_attributes(params)
       end
     end
     
@@ -52,14 +53,14 @@ class SubscribersController < ApplicationController
     end
   end
 
+  # POST /subscribers/sign_up
   def sign_up
-    params[:subscriber].reject! do |k, v|
+    params.reject! do |k, v|
       !%w[email password password_confirmation].include?(k)
     end
 
-    subscriber = Subscriber.new(params[:subscriber])
+    subscriber = Subscriber.new(params)
 
-    subscriber.reset_authentication_token
     if subscriber.save
       render json: { status: 0, subscriber: subscriber }
     else
@@ -67,6 +68,7 @@ class SubscribersController < ApplicationController
     end
   end
 
+  # GET /subscribers
   def index
     status = 0
     messages = ['', 'Subscriber not found', 'No subscriber found']
@@ -85,67 +87,84 @@ class SubscribersController < ApplicationController
     end
   end
 
+  # POST /subscribers/subscribe
   def subscribe
-    status = 0
-    messages = ['', '', 'User id not found', 'Subscriber not found']
-    
-    subscriber = Subscriber.find(params[:subscriber_id])
+    ensure_authenticate do
+      status = 0
+      messages = ['', 'Subscriber save error', 'Subscriber not found', 'User id not found']
+      
+      subscriber = Subscriber.find(params[:subscriber_id])
 
-    if subscriber
-      user = User.userid(params[:user_id]).first
-      if user
-        subscriber.users << user
-        # Save subscriber error
-        status = 1 if !subscriber.save
+      if subscriber
+        user = User.userid(params[:user_id]).first
+        if user
+          subscriber.users << user
+          # Subscriber save error
+          status = 1 if !subscriber.save
+        else
+          # User id not found
+          status = 3
+        end
       else
-        # User id not found
+        # Subscriber not found
         status = 2
       end
-    else
-      # Subscriber not found
-      status = 3
-    end
 
-    if status == 0
-      render json: { status: status, subscriber: subscriber }
-    else
-      if status == 1
-        render json: { status: status, errors: subscriber.errors }
+      if status == 0
+        render json: { status: status, subscriber: subscriber }
       else
-        render json: { status: status, message: messages[status] }
+        if status == 1
+          render json: { status: status, errors: subscriber.errors }
+        else
+          render json: { status: status, message: messages[status] }
+        end
       end
     end
   end
 
+  # POST /subscribers/unsubscribe
   def unsubscribe
-    status = 0
-    messages = ['', '', 'User id hasn\'t been subscribed', 'Subscriber not found']
+    ensure_authenticated do
+      status = 0
+      messages = ['', 'Subscriber save error', 'Subscriber not found', 'User id hasn\'t been subscribed']
 
-    subscriber = Subscriber.find(params[:subscriber_id])
+      subscriber = Subscriber.find(params[:subscriber_id])
 
-    if subscriber
-      user = subscriber.users.userid(params[:user_id]).first
-      if user
-        subscriber.users -= [user]
-        # Save subscriber error
-        status = 1 if !subscriber.save
+      if subscriber
+        user = subscriber.users.userid(params[:user_id]).first
+        if user
+          subscriber.users -= [user]
+          # Subscriber save error
+          status = 1 if !subscriber.save
+        else
+          # User id not found
+          status = 3
+        end
       else
-        # User id not found
+        # Subscriber not found
         status = 2
       end
-    else
-      # Subscriber not found
-      status = 3
-    end
 
-    if status == 0
-      render json: { status: status, subscriber: subscriber }
-    else
-      if status == 1
-        render json: { status: status, errors: subscriber.errors }
+      if status == 0
+        render json: { status: status, subscriber: subscriber }
       else
-        render json: { status: status, message: messages[status] }
+        if status == 1
+          render json: { status: status, errors: subscriber.errors }
+        else
+          render json: { status: status, message: messages[status] }
+        end
       end
+    end
+  end
+
+  private
+  def ensure_authenticate
+    authenticated = true
+
+    unless authenticated
+      render json: { status: 4, message: "Authentication failed"}
+    else
+      yield
     end
   end
 end
