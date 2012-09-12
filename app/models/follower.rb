@@ -1,12 +1,12 @@
 class Follower
   include Mongoid::Document
-  # Include default devise modules. Others available are:
-  # :token_authenticatable, :confirmable,
-  # :lockable, :timeoutable and :omniauthable
+  include Mongoid::CachedJson
+
   devise :database_authenticatable,
-         :registerable,
          :recoverable,
+         :registerable,
          :validatable,
+         :timeoutable,
          :token_authenticatable
 
   ## Database authenticatable
@@ -19,9 +19,6 @@ class Follower
   ## Recoverable
   field :reset_password_token,   :type => String
   field :reset_password_sent_at, :type => Time
-
-  ## Rememberable
-  # field :remember_created_at, :type => Time
 
   ## Trackable
   # field :sign_in_count,      :type => Integer, :default => 0
@@ -43,4 +40,12 @@ class Follower
 
   ## Token authenticatable
   field :authentication_token, :type => String
+
+  json_fields \
+    email: { },
+    auth_token: { definition: :auth_token }
+
+  def auth_token
+    return authentication_token
+  end
 end
