@@ -1,0 +1,2 @@
+module Followers::SessionsHelper
+end

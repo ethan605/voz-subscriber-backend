@@ -1,0 +1,2 @@
+module Followers::PasswordsHelper
+end
