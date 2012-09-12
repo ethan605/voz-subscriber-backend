@@ -39,7 +39,12 @@ class Crawler::Crawler
 			puts "#{e}"
 			puts "Waiting 3 seconds to continue"
 			sleep(3)
-			yield
+			begin
+				yield
+			rescue Exception => e
+				puts "#{e}"
+				puts "Aborted"
+			end
 		end
 	end
 end

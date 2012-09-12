@@ -1,17 +1,17 @@
 class Crawler::UsersCrawler < Crawler::Crawler
 	# Override method
-	def crawl(userid)
+	def crawl(userid, with_posts)
 		puts "\n\nCrawling user with id #{userid}"
 
-		@@auth_agent = Crawler::Crawler.login if !@@auth_agent
+		@@auth_agent = Crawler::Crawler.login unless @@auth_agent
 		@url = 'http://vozforums.com/member.php?u='
 
 		ensure_authen do
-			perform_crawler(userid)
+			crawl_user(userid, with_posts)
 		end
 	end
 
-	def perform_crawler(userid)
+	def crawl_user(userid, with_posts)
 		puts "Crawling users with url: #{@url}#{userid}"
 
 		page = @@auth_agent.get("#{@url}#{userid}")
@@ -41,6 +41,7 @@ class Crawler::UsersCrawler < Crawler::Crawler
 		return if !user.save
 
 		puts "Crawled user: #{user.username} id: #{user.userid}"
-		Crawler::PostsCrawler.new.crawl(userid)
+
+		Crawler::PostsCrawler.new.crawl(userid) if with_posts
 	end
 end

@@ -20,6 +20,7 @@ class User
 	has_and_belongs_to_many :subscribers
 
 	scope :userid, ->(_userid) { return self.where(userid: _userid) }
+	scope :username, ->(_username) { return self.where(username: _username) }
 	scope :search, ->(_username) {
 		return self.full_text_search(_username, allow_empty_search: true)
 	}
@@ -40,9 +41,9 @@ class User
     User.crawl(1055511, 0)
   end
 
-	def self.crawl(from = 1, range = 10)
+	def self.crawl(from = 1, range = 10, with_posts = false)
 		from.upto(from+range) do |i|
-			Crawler::UsersCrawler.new.crawl(i)
+			Crawler::UsersCrawler.new.crawl(i, with_posts)
 		end
 	end
 
