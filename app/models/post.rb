@@ -33,7 +33,7 @@ class Post
   end
 
   def post_date_rfc
-    return post_date.rfc822
+    return self.post_date.rfc822
   end
 
   def post_user

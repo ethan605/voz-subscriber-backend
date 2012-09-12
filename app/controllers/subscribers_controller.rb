@@ -17,6 +17,7 @@ class SubscribersController < ApplicationController
     end
 
     if status == 0
+      subscriber.reset_authentication_token!
       render json: { status: status, subscriber: subscriber }
     else
       render json: { status: status, message: messages[status] }
@@ -26,9 +27,10 @@ class SubscribersController < ApplicationController
   # PUT /subscribers
   def update
     status = 0
-    messages = ['', 'Email not found', 'Invalid password']
+    messages = ['', 'Subscriber id not found', 'Invalid password']
 
-    subscriber = Subscriber.where(email: params[:email]).first
+    subscriber = Subscriber.find(params[:subscriber_id])
+    
     if !subscriber
       status = 1
     else
@@ -36,13 +38,14 @@ class SubscribersController < ApplicationController
         status = 2
       else
         params.reject! do |k, v|
-          !%w[email password password_confirmation].include?(k)
+          !%w[password password_confirmation].include?(k)
         end
         status = 3 unless subscriber.update_attributes(params)
       end
     end
     
     if status == 0
+      subscriber.reset_authentication_token!
       render json: { status: status, subscriber: subscriber }
     else
       if status == 3
@@ -89,31 +92,25 @@ class SubscribersController < ApplicationController
 
   # POST /subscribers/subscribe
   def subscribe
-    ensure_authenticate do
+    ensure_authenticate do |subscriber|
       status = 0
-      messages = ['', 'Subscriber save error', 'Subscriber not found', 'User id not found']
-      
-      subscriber = Subscriber.find(params[:subscriber_id])
+      messages = ['', 'Authentication failed',
+                  'Subscriber save error', 'User id not found']
 
-      if subscriber
-        user = User.userid(params[:user_id]).first
-        if user
-          subscriber.users << user
-          # Subscriber save error
-          status = 1 if !subscriber.save
-        else
-          # User id not found
-          status = 3
-        end
+      user = User.userid(params[:user_id]).first
+      if user
+        subscriber.users << user
+        # Subscriber save error
+        status = 2 if !subscriber.save
       else
-        # Subscriber not found
-        status = 2
+        # User id not found
+        status = 3
       end
 
       if status == 0
         render json: { status: status, subscriber: subscriber }
       else
-        if status == 1
+        if status == 2
           render json: { status: status, errors: subscriber.errors }
         else
           render json: { status: status, message: messages[status] }
@@ -124,31 +121,25 @@ class SubscribersController < ApplicationController
 
   # POST /subscribers/unsubscribe
   def unsubscribe
-    ensure_authenticated do
+    ensure_authenticated do |subscriber|
       status = 0
-      messages = ['', 'Subscriber save error', 'Subscriber not found', 'User id hasn\'t been subscribed']
+      messages = ['', 'Authentication failed',
+                  'Subscriber save error', 'User id hasn\'t been subscribed']
 
-      subscriber = Subscriber.find(params[:subscriber_id])
-
-      if subscriber
-        user = subscriber.users.userid(params[:user_id]).first
-        if user
-          subscriber.users -= [user]
-          # Subscriber save error
-          status = 1 if !subscriber.save
-        else
-          # User id not found
-          status = 3
-        end
+      user = subscriber.users.userid(params[:user_id]).first
+      if user
+        subscriber.users -= [user]
+        # Subscriber save error
+        status = 2 if !subscriber.save
       else
-        # Subscriber not found
-        status = 2
+        # User id not found
+        status = 3
       end
 
       if status == 0
         render json: { status: status, subscriber: subscriber }
       else
-        if status == 1
+        if status == 2
           render json: { status: status, errors: subscriber.errors }
         else
           render json: { status: status, message: messages[status] }
@@ -159,12 +150,23 @@ class SubscribersController < ApplicationController
 
   private
   def ensure_authenticate
-    authenticated = true
+    subscriber = Subscriber.find(params[:subscriber_id])
 
-    unless authenticated
-      render json: { status: 4, message: "Authentication failed"}
+    status = 0
+    message = ['', 'wrong subscriber id', 'authentication token expired']
+
+    unless subscriber
+      status = 1
     else
-      yield
+      status = 2 unless subscriber.validate_authentication?(params[:auth_token])
+    end
+
+    # binding.pry
+
+    if status == 0
+      yield(subscriber)
+    else
+      render json: { status: 1, message: "Authentication failed (#{message[status]})"}
     end
   end
 end
