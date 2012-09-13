@@ -16,7 +16,7 @@ class FeedsController < ApplicationController
     @posts = Post.all
 
     case req
-    when 1    # 'subscriber_id' available
+    when 1    # 'subscriber' available
       subscriber = Subscriber.email(params[:subscriber]).first
       if subscriber
         @feed_url = "#{feed_url_prefix}?subscriber=#{params[:subscriber]}"
@@ -29,7 +29,7 @@ class FeedsController < ApplicationController
         # Subscriber not found
         status = 1
       end
-    when 2    # 'user_id' available
+    when 2    # 'user' available
       user = User.username(params[:user]).first
       if user
         @feed_url = "#{feed_url_prefix}?user=#{params[:user]}"

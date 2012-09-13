@@ -3,6 +3,9 @@ class Crawler::PostsCrawler < Crawler::Crawler
   def crawl(userid)
     puts "\nCrawling posts with userid #{userid}"
 
+    # Bind mutex with current crawling userid
+    bind_mutex(userid)
+
     @@auth_agent = Crawler::Crawler.login if !@@auth_agent
     @url = 'http://vozforums.com/search.php?do=finduser&u='
     @user_db_id = User.userid(userid).first.id
@@ -11,7 +14,10 @@ class Crawler::PostsCrawler < Crawler::Crawler
       page = @@auth_agent.get("#{@url}#{userid}")
 
       # In case of no post found with this userid
-      return if (page.content.include?('Sorry - no matches. Please try some different terms.'))
+      if (page.content.include?('Sorry - no matches. Please try some different terms.'))
+        release_mutex
+        return
+      end
 
       doc = Nokogiri::HTML(page.content)
       info = doc.css('.pagenav .tborder .alt1 .smallfont')
@@ -25,6 +31,8 @@ class Crawler::PostsCrawler < Crawler::Crawler
         end
       end
     end
+
+    release_mutex
   end
 
   def perform_crawler(index, userid)

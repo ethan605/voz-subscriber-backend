@@ -66,8 +66,8 @@ class Subscriber
 
   def subscribed_posts
     return nil if self.users.count == 0
-    self.user_ids = []
-    self.users.each { |u| user_ids << u.id }
-    return Post.user_ids(user_ids)
+    user_ids_array = []
+    self.users.each { |u| user_ids_array << u.id }
+    return Post.user_ids(user_ids_array)
   end
 end

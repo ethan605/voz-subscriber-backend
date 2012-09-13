@@ -1,14 +1,24 @@
 class Crawler::Crawler
 	# Mechanize agent for loggin in forums
 	@@auth_agent = nil
-	attr_reader :auth_agent
 
-	def self.auth_agent
-		return @@auth_agent
+	# Thread safe mutex for user crawling
+	@@current_crawling_userid = 0
+
+	attr_reader :mutex
+
+	def self.mutex
+		return @@current_crawling_userid
 	end
 
-	def self.auth_agent=(agent = nil)
-		@@auth_agent = agent
+	def bind_mutex(userid)
+		@@current_crawling_userid = userid
+		puts "mutex = #{@@current_crawling_userid}"
+	end
+
+	def release_mutex
+		puts "release mutex"
+		@@current_crawling_userid = 0
 	end
 
 	# Login forums to search data

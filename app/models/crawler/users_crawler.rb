@@ -3,12 +3,19 @@ class Crawler::UsersCrawler < Crawler::Crawler
 	def crawl(userid, with_posts)
 		puts "\n\nCrawling user with id #{userid}"
 
+		# Set mutex to bind with current crawling userid
+		# in case of crawling user without posts
+		bind_mutex(userid) unless with_posts
+
 		@@auth_agent = Crawler::Crawler.login unless @@auth_agent
 		@url = 'http://vozforums.com/member.php?u='
 
 		ensure_authen do
 			crawl_user(userid, with_posts)
 		end
+
+		# Release mutex
+		release_mutex unless with_posts
 	end
 
 	def crawl_user(userid, with_posts)

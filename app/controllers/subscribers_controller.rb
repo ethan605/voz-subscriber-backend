@@ -65,6 +65,7 @@ class SubscribersController < ApplicationController
     subscriber = Subscriber.new(params)
 
     if subscriber.save
+      Thread.new { SubscribeMailer.welcome_email(subscriber).deliver }
       render json: { status: 0, subscriber: subscriber }
     else
       render json: { status: 1, errors: subscriber.errors }
@@ -108,6 +109,9 @@ class SubscribersController < ApplicationController
       end
 
       if status == 0
+        Thread.new {
+          User.crawl(user.userid, 0, true) if Crawler::Crawler.mutex == 0
+        }
         render json: { status: status, subscriber: subscriber }
       else
         if status == 2

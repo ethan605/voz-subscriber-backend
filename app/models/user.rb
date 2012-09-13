@@ -41,7 +41,7 @@ class User
     User.crawl(1055511, 0)
   end
 
-	def self.crawl(from = 1, range = 10, with_posts = false)
+	def self.crawl(from = 1, range = 100, with_posts = false)
 		from.upto(from+range) do |i|
 			Crawler::UsersCrawler.new.crawl(i, with_posts)
 		end
