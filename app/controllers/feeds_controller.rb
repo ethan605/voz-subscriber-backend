@@ -44,7 +44,6 @@ class FeedsController < ApplicationController
     @posts = @posts.order_by([:postid, :desc]).page(1).per(30) if status == 0
 
     respond_to do |format|
-      format.html
       format.rss { render layout: false }
     end
   end

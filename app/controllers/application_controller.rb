@@ -9,7 +9,7 @@ class ApplicationController < ActionController::Base
 
     request_host += ":#{request.port}" if request.host == 'localhost'
 
-    doc = {
+    api = {
       'APIs' => {
         'Generate RSS Feeds for all posts (order by newest first)' => {
           "GET" => "#{request_host}/feeds.rss"
@@ -44,6 +44,22 @@ class ApplicationController < ActionController::Base
             "password_confirmation" => "<subscriber's confirmed password>"
           }
         },
+        'Subscribe to an user' => {
+          "POST" => "#{request_host}/subscribers/subscribe",
+          "params" => {
+            "subscriber_id" => "<subscriber's id>",
+            "user_id" => "<subscribed user's id>",
+            "auth_token" => "<subscriber's login authentication token>"
+          }
+        },
+        'Unsubscribe to an user' => {
+          "POST" => "#{request_host}/subscribers/unsubscribe",
+          "params" => {
+            "subscriber_id" => "<subscriber's id>",
+            "user_id" => "<subscribed user's id>",
+            "auth_token" => "<subscriber's login authentication token>"
+          }
+        },
         'Generate RSS Feeds for a Voz user by username (order by newest first)' => {
           "GET" => "#{request_host}/feeds.rss?user=#{user.username}"
         },
@@ -64,11 +80,11 @@ class ApplicationController < ActionController::Base
         }
       },
       'STATS' => {
-        'all subscribers' => Subscriber.count,
-        'all users' => User.count,
-        'all posts' => Post.count
+        'Total subscribers' => Subscriber.count,
+        'Total users' => User.count,
+        'Total posts' => Post.count
       }
     }
-    render json: doc
+    render json: api
   end
 end
