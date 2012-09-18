@@ -15,7 +15,7 @@ class Crawler::PostsCrawler < Crawler::Crawler
 
       # In case of no post found with this userid
       if (page.content.include?('Sorry - no matches. Please try some different terms.'))
-        release_mutex
+        release_mutex(userid)
         return
       end
 
@@ -32,7 +32,7 @@ class Crawler::PostsCrawler < Crawler::Crawler
       end
     end
 
-    release_mutex
+    release_mutex(userid)
   end
 
   def perform_crawler(index, userid)

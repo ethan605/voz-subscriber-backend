@@ -15,7 +15,7 @@ class Crawler::UsersCrawler < Crawler::Crawler
 		end
 
 		# Release mutex
-		release_mutex unless with_posts
+		release_mutex(userid) unless with_posts
 	end
 
 	def crawl_user(userid, with_posts)

@@ -1,4 +1,23 @@
 class SubscribersController < ApplicationController
+  # GET /subscribers
+  def index
+    status = 0
+    messages = ['', 'Subscriber not found', 'No subscriber found']
+
+    subscribers = Subscriber.all
+    subscribers = subscribers.page(params[:page]).per(params[:per_page])
+    subscribers = subscribers.search(params[:q])
+
+    # No user found
+    status = 2 if subscribers.count == 0
+
+    if status == 0
+      render json: { status: status, results: subscribers.count, subscribers: subscribers }
+    else
+      render json: { status: status, message: messages[status] }
+    end
+  end
+
   # POST /subscribers
   def create
     status = 0
@@ -17,7 +36,6 @@ class SubscribersController < ApplicationController
     end
 
     if status == 0
-      subscriber.reset_authentication_token!
       render json: { status: status, subscriber: subscriber }
     else
       render json: { status: status, message: messages[status] }
@@ -45,7 +63,6 @@ class SubscribersController < ApplicationController
     end
     
     if status == 0
-      subscriber.reset_authentication_token!
       render json: { status: status, subscriber: subscriber }
     else
       if status == 3
@@ -72,25 +89,6 @@ class SubscribersController < ApplicationController
     end
   end
 
-  # GET /subscribers
-  def index
-    status = 0
-    messages = ['', 'Subscriber not found', 'No subscriber found']
-
-    subscribers = Subscriber.all
-    subscribers = subscribers.page(params[:page]).per(params[:per_page])
-    subscribers = subscribers.search(params[:q])
-
-    # No user found
-    status = 2 if subscribers.count == 0
-
-    if status == 0
-      render json: { status: status, results: subscribers.count, subscribers: subscribers }
-    else
-      render json: { status: status, message: messages[status] }
-    end
-  end
-
   # POST /subscribers/subscribe
   def subscribe
     ensure_authenticate do |subscriber|
@@ -110,7 +108,7 @@ class SubscribersController < ApplicationController
 
       if status == 0
         Thread.new {
-          User.crawl(user.userid, 0, true) if Crawler::Crawler.mutex == 0
+          User.crawl(user.userid, 0, true) unless Crawler::Crawler.mutex.include?(user.userid)
         }
         render json: { status: status, subscriber: subscriber }
       else
@@ -125,7 +123,7 @@ class SubscribersController < ApplicationController
 
   # POST /subscribers/unsubscribe
   def unsubscribe
-    ensure_authenticated do |subscriber|
+    ensure_authenticate do |subscriber|
       status = 0
       messages = ['', 'Authentication failed',
                   'Subscriber save error', 'User id hasn\'t been subscribed']
@@ -154,23 +152,31 @@ class SubscribersController < ApplicationController
 
   private
   def ensure_authenticate
+    status = 0
+    messages = ['', 'Authentication failed']
+    param_hmac = params[:hmac]
     subscriber = Subscriber.find(params[:subscriber_id])
 
-    status = 0
-    message = ['', 'wrong subscriber id', 'authentication token expired']
+    if subscriber && param_hmac
+      params.reject! do |k, v|
+        !%w[subscriber_id user_id].include?(k)
+      end
 
-    unless subscriber
-      status = 1
+      digest = OpenSSL::Digest::Digest.new('sha256')
+      private_key = subscriber.private_key
+      message = [request.path, request.method, params]
+      message = Subscriber.convert_params(message)
+      hmac = OpenSSL::HMAC.hexdigest(digest, private_key.to_s, message)
+
+      status = 1 unless param_hmac && hmac == param_hmac
     else
-      status = 2 unless subscriber.validate_authentication?(params[:auth_token])
+      status = 1
     end
-
-    # binding.pry
 
     if status == 0
       yield(subscriber)
     else
-      render json: { status: 1, message: "Authentication failed (#{message[status]})"}
+      render json: { status: 1, message: 'Authentication failed' }
     end
   end
 end

@@ -3,22 +3,22 @@ class Crawler::Crawler
 	@@auth_agent = nil
 
 	# Thread safe mutex for user crawling
-	@@current_crawling_userid = 0
+	@@current_crawling_userids = []
 
 	attr_reader :mutex
 
 	def self.mutex
-		return @@current_crawling_userid
+		return @@current_crawling_userids
 	end
 
 	def bind_mutex(userid)
-		@@current_crawling_userid = userid
-		puts "mutex = #{@@current_crawling_userid}"
+		@@current_crawling_userids << userid
+		puts "mutex = #{@@current_crawling_userids}"
 	end
 
-	def release_mutex
-		puts "release mutex"
-		@@current_crawling_userid = 0
+	def release_mutex(userid)
+		puts "release mutex binding with #{userid}"
+		@@current_crawling_userids - [userid]
 	end
 
 	# Login forums to search data

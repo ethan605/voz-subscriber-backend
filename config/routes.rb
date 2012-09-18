@@ -1,12 +1,10 @@
 VozSubscriberBackend::Application.routes.draw do
-  # devise_for :dev_test
-
   root :to => 'application#index'
 
   resource :subscribers,
            format: false,
            only: %[index create destroy update sign_up subscribe unsubscribe] do
-    get :index, as: :index
+    # get :index, as: :index
     post :create, as: :sign_in
     put :update, as: :change_password
     post :sign_up, as: :sign_up

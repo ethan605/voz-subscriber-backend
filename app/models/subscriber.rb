@@ -3,28 +3,24 @@ class Subscriber
   include Mongoid::CachedJson
   include Mongoid::Search
 
-  AUTH_EXPIRE_TIME = 30.minutes
-
-  before_save :ensure_authentication_token
+  HASH_CONVERTER = {
+    '[\[\]{},\s\\"=\>]+' => '|',
+    '(^\||\|$)' => ''
+  }
 
   has_and_belongs_to_many :users
 
   devise :database_authenticatable,
          :registerable,
-         :validatable,
-         :token_authenticatable
+         :validatable
 
   # Database authenticatable
   field :email
   field :encrypted_password
+  field :private_key
 
   validates_presence_of :email, :encrypted_password
   validates_uniqueness_of :email
-
-  field :auth_expire_date, type: Time, default: ->{ AUTH_EXPIRE_TIME.from_now }
-
-  ## Token authenticable
-  field :authentication_token
 
   search_in :email
 
@@ -36,28 +32,23 @@ class Subscriber
   json_fields \
     id: { },
   	email: { },
-    auth_token: { definition: :auth_token },
-    auth_expire_date: { definition: :auth_expire_date_rfc },
   	subscribed_users: { definition: :subscribed_users }
 
-  # Override method
-  def reset_authentication_token!
-    self.auth_expire_date = AUTH_EXPIRE_TIME.from_now
+  def self.convert_params(params)
+    return nil unless params
+
+    message = params.to_s
+    HASH_CONVERTER.each do |k, v|
+      message.gsub!(/#{k}/, v)
+    end
+
+    return message
+  end
+
+  # Overriden save
+  def save
+    self.private_key = Digest::SHA2.new.update(self.email).to_s
     super
-  end
-
-  def auth_token
-    return self.authentication_token
-  end
-
-  def validate_authentication?(auth_token)
-    # binding.pry
-    return auth_token == self.authentication_token &&
-           self.auth_expire_date > Time.now
-  end
-
-  def auth_expire_date_rfc
-    return self.auth_expire_date.rfc822
   end
 
   def subscribed_users
